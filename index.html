@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Cobrinha</title>
+
+<style>
+body {
+    margin: 0;
+    background: #111;
+    color: white;
+    font-family: Arial;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+canvas {
+    background: black;
+    border: 3px solid lime;
+    touch-action: none;
+}
+
+#controles {
+    display: none;
+    margin-top: 15px;
+}
+
+.botao {
+    width: 70px;
+    height: 70px;
+    margin: 5px;
+    font-size: 30px;
+    background: #222;
+    color: white;
+    border: 2px solid lime;
+    border-radius: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="controles">
+    <div style="text-align:center">
+        <button class="botao" onclick="mudarDirecao('UP')">⬆️</button>
+    </div>
+    <div>
+        <button class="botao" onclick="mudarDirecao('LEFT')">⬅️</button>
+        <button class="botao" onclick="mudarDirecao('DOWN')">⬇️</button>
+        <button class="botao" onclick="mudarDirecao('RIGHT')">➡️</button>
+    </div>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let tamanho = 20;
+let cobrinha;
+let direcao;
+let maca;
+let intervalo;
+
+function ehMobile() {
+    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+
+function ajustarTela() {
+    if (ehMobile()) {
+        canvas.width = window.innerWidth - 20;
+        canvas.height = window.innerWidth - 20;
+        tamanho = 25;
+        document.getElementById("controles").style.display = "block";
+    } else {
+        canvas.width = 400;
+        canvas.height = 400;
+    }
+}
+
+function iniciar() {
+    ajustarTela();
+    cobrinha = [{x: 0, y: 0}];
+    direcao = "RIGHT";
+    maca = gerarMaca();
+    clearInterval(intervalo);
+    intervalo = setInterval(loop, 120);
+}
+
+function gerarMaca() {
+    return {
+        x: Math.floor(Math.random() * (canvas.width / tamanho)) * tamanho,
+        y: Math.floor(Math.random() * (canvas.height / tamanho)) * tamanho
+    };
+}
+
+function mudarDirecao(dir) {
+    if (dir === "UP" && direcao !== "DOWN") direcao = "UP";
+    if (dir === "DOWN" && direcao !== "UP") direcao = "DOWN";
+    if (dir === "LEFT" && direcao !== "RIGHT") direcao = "LEFT";
+    if (dir === "RIGHT" && direcao !== "LEFT") direcao = "RIGHT";
+}
+
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp") mudarDirecao("UP");
+    if (e.key === "ArrowDown") mudarDirecao("DOWN");
+    if (e.key === "ArrowLeft") mudarDirecao("LEFT");
+    if (e.key === "ArrowRight") mudarDirecao("RIGHT");
+});
+
+function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    let head = {...cobrinha[0]};
+
+    if (direcao === "UP") head.y -= tamanho;
+    if (direcao === "DOWN") head.y += tamanho;
+    if (direcao === "LEFT") head.x -= tamanho;
+    if (direcao === "RIGHT") head.x += tamanho;
+
+    if (
+        head.x < 0 || head.y < 0 ||
+        head.x >= canvas.width || head.y >= canvas.height ||
+        cobrinha.some(p => p.x === head.x && p.y === head.y)
+    ) {
+        clearInterval(intervalo);
+        setTimeout(() => {
+            alert("Game Over 🐍");
+            iniciar();
+        }, 100);
+        return;
+    }
+
+    cobrinha.unshift(head);
+
+    if (head.x === maca.x && head.y === maca.y) {
+        maca = gerarMaca();
+    } else {
+        cobrinha.pop();
+    }
+
+    ctx.fillStyle = "red";
+    ctx.fillRect(maca.x, maca.y, tamanho, tamanho);
+
+    ctx.fillStyle = "lime";
+    cobrinha.forEach(p =>
+        ctx.fillRect(p.x, p.y, tamanho - 1, tamanho - 1)
+    );
+}
+
+iniciar();
+</script>
+
+</body>
+</html>
