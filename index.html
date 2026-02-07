@@ -8,12 +8,9 @@
 body {
     margin: 0;
     background: #111;
-    color: white;
-    font-family: Arial;
     display: flex;
-    flex-direction: column;
-    align-items: center;
     justify-content: center;
+    align-items: center;
     height: 100vh;
 }
 
@@ -22,64 +19,73 @@ canvas {
     border: 3px solid lime;
     touch-action: none;
 }
-
-#controles {
-    display: none;
-    margin-top: 15px;
-}
-
-.botao {
-    width: 70px;
-    height: 70px;
-    margin: 5px;
-    font-size: 30px;
-    background: #222;
-    color: white;
-    border: 2px solid lime;
-    border-radius: 10px;
-}
 </style>
 </head>
 
 <body>
-
 <canvas id="game"></canvas>
-
-<div id="controles">
-    <div style="text-align:center">
-        <button class="botao" onclick="mudarDirecao('UP')">⬆️</button>
-    </div>
-    <div>
-        <button class="botao" onclick="mudarDirecao('LEFT')">⬅️</button>
-        <button class="botao" onclick="mudarDirecao('DOWN')">⬇️</button>
-        <button class="botao" onclick="mudarDirecao('RIGHT')">➡️</button>
-    </div>
-</div>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
 let tamanho = 20;
-let cobrinha;
-let direcao;
-let maca;
-let intervalo;
+let cobrinha, direcao, maca, intervalo;
 
+// Detecta mobile
 function ehMobile() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
+// Ajusta tamanho ao girar a tela
 function ajustarTela() {
-    if (ehMobile()) {
-        canvas.width = window.innerWidth - 20;
-        canvas.height = window.innerWidth - 20;
-        tamanho = 25;
-        document.getElementById("controles").style.display = "block";
+    let lado = Math.min(window.innerWidth, window.innerHeight) - 20;
+    canvas.width = lado;
+    canvas.height = lado;
+
+    tamanho = ehMobile() ? 25 : 20;
+}
+
+window.addEventListener("resize", ajustarTela);
+
+// Swipe (arrastar dedo)
+let startX = 0;
+let startY = 0;
+
+canvas.addEventListener("touchstart", e => {
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+});
+
+canvas.addEventListener("touchend", e => {
+    let endX = e.changedTouches[0].clientX;
+    let endY = e.changedTouches[0].clientY;
+
+    let dx = endX - startX;
+    let dy = endY - startY;
+
+    if (Math.abs(dx) > Math.abs(dy)) {
+        if (dx > 0 && direcao !== "LEFT") direcao = "RIGHT";
+        if (dx < 0 && direcao !== "RIGHT") direcao = "LEFT";
     } else {
-        canvas.width = 400;
-        canvas.height = 400;
+        if (dy > 0 && direcao !== "UP") direcao = "DOWN";
+        if (dy < 0 && direcao !== "DOWN") direcao = "UP";
     }
+});
+
+// Teclado (PC)
+document.addEventListener("keydown", e => {
+    if (e.key === "ArrowUp" && direcao !== "DOWN") direcao = "UP";
+    if (e.key === "ArrowDown" && direcao !== "UP") direcao = "DOWN";
+    if (e.key === "ArrowLeft" && direcao !== "RIGHT") direcao = "LEFT";
+    if (e.key === "ArrowRight" && direcao !== "LEFT") direcao = "RIGHT";
+});
+
+function gerarMaca() {
+    return {
+        x: Math.floor(Math.random() * (canvas.width / tamanho)) * tamanho,
+        y: Math.floor(Math.random() * (canvas.height / tamanho)) * tamanho
+    };
 }
 
 function iniciar() {
@@ -90,27 +96,6 @@ function iniciar() {
     clearInterval(intervalo);
     intervalo = setInterval(loop, 120);
 }
-
-function gerarMaca() {
-    return {
-        x: Math.floor(Math.random() * (canvas.width / tamanho)) * tamanho,
-        y: Math.floor(Math.random() * (canvas.height / tamanho)) * tamanho
-    };
-}
-
-function mudarDirecao(dir) {
-    if (dir === "UP" && direcao !== "DOWN") direcao = "UP";
-    if (dir === "DOWN" && direcao !== "UP") direcao = "DOWN";
-    if (dir === "LEFT" && direcao !== "RIGHT") direcao = "LEFT";
-    if (dir === "RIGHT" && direcao !== "LEFT") direcao = "RIGHT";
-}
-
-document.addEventListener("keydown", e => {
-    if (e.key === "ArrowUp") mudarDirecao("UP");
-    if (e.key === "ArrowDown") mudarDirecao("DOWN");
-    if (e.key === "ArrowLeft") mudarDirecao("LEFT");
-    if (e.key === "ArrowRight") mudarDirecao("RIGHT");
-});
 
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -154,6 +139,5 @@ function loop() {
 
 iniciar();
 </script>
-
 </body>
 </html>
