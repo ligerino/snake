@@ -12,8 +12,8 @@ html, body {
     padding: 0;
     width: 100%;
     height: 100%;
-    overflow: hidden;           /* trava rolagem */
-    touch-action: none;         /* trava gestos do navegador */
+    overflow: hidden;
+    touch-action: none;
     background: #111;
 }
 
@@ -40,7 +40,7 @@ const ctx = canvas.getContext("2d");
 let tamanho;
 let cobrinha, direcao, maca, intervalo;
 
-// Ajusta tela para qualquer rotação
+// ===== AJUSTE DE TELA (ROTAÇÃO AUTOMÁTICA) =====
 function ajustarTela() {
     const margem = 10;
     const largura = window.innerWidth - margem;
@@ -61,15 +61,15 @@ window.addEventListener("resize", () => {
 // ===== CONTROLE POR SWIPE (TELA INTEIRA) =====
 let startX = 0;
 let startY = 0;
-const sensibilidade = 2; // EXTREMAMENTE sensível
+const sensibilidade = 1; // QUANTO MENOR, MAIS FORTE
 
-document.body.addEventListener("touchstart", e => {
+document.addEventListener("touchstart", e => {
     e.preventDefault();
     startX = e.touches[0].clientX;
     startY = e.touches[0].clientY;
 }, { passive: false });
 
-document.body.addEventListener("touchend", e => {
+document.addEventListener("touchend", e => {
     e.preventDefault();
 
     const endX = e.changedTouches[0].clientX;
@@ -89,7 +89,12 @@ document.body.addEventListener("touchend", e => {
     }
 }, { passive: false });
 
-// Teclado (PC)
+// BLOQUEIA QUALQUER MOVIMENTO DA PÁGINA
+document.addEventListener("touchmove", e => {
+    e.preventDefault();
+}, { passive: false });
+
+// ===== TECLADO (PC) =====
 document.addEventListener("keydown", e => {
     if (e.key === "ArrowUp" && direcao !== "DOWN") direcao = "UP";
     if (e.key === "ArrowDown" && direcao !== "UP") direcao = "DOWN";
@@ -97,6 +102,7 @@ document.addEventListener("keydown", e => {
     if (e.key === "ArrowRight" && direcao !== "LEFT") direcao = "RIGHT";
 });
 
+// ===== JOGO =====
 function gerarMaca() {
     return {
         x: Math.floor(Math.random() * (canvas.width / tamanho)) * tamanho,
