@@ -2,22 +2,30 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
 <title>Cobrinha</title>
 
 <style>
-body {
+html, body {
     margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;           /* trava rolagem */
+    touch-action: none;         /* trava gestos do navegador */
     background: #111;
+}
+
+body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
 }
 
 canvas {
     background: black;
     border: 3px solid lime;
-    touch-action: none;
 }
 </style>
 </head>
@@ -29,40 +37,48 @@ canvas {
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
 
-let tamanho = 20;
+let tamanho;
 let cobrinha, direcao, maca, intervalo;
 
-// Detecta mobile
-function ehMobile() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
-
-// Ajusta tamanho ao girar a tela
+// Ajusta tela para qualquer rotação
 function ajustarTela() {
-    let lado = Math.min(window.innerWidth, window.innerHeight) - 20;
+    const margem = 10;
+    const largura = window.innerWidth - margem;
+    const altura = window.innerHeight - margem;
+    const lado = Math.min(largura, altura);
+
     canvas.width = lado;
     canvas.height = lado;
 
-    tamanho = ehMobile() ? 25 : 20;
+    tamanho = lado < 400 ? 25 : 20;
 }
 
-window.addEventListener("resize", ajustarTela);
-
-// Swipe (arrastar dedo)
-let startX = 0;
-let startY = 0;
-
-canvas.addEventListener("touchstart", e => {
-    startX = e.touches[0].clientX;
-    startY = e.touches[0].clientY;
+window.addEventListener("resize", () => {
+    clearInterval(intervalo);
+    iniciar();
 });
 
-canvas.addEventListener("touchend", e => {
-    let endX = e.changedTouches[0].clientX;
-    let endY = e.changedTouches[0].clientY;
+// Swipe com mais sensibilidade
+let startX = 0;
+let startY = 0;
+const sensibilidade = 20; // quanto menor, mais sensível
 
-    let dx = endX - startX;
-    let dy = endY - startY;
+canvas.addEventListener("touchstart", e => {
+    e.preventDefault();
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+}, { passive: false });
+
+canvas.addEventListener("touchend", e => {
+    e.preventDefault();
+
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+
+    if (Math.abs(dx) < sensibilidade && Math.abs(dy) < sensibilidade) return;
 
     if (Math.abs(dx) > Math.abs(dy)) {
         if (dx > 0 && direcao !== "LEFT") direcao = "RIGHT";
@@ -71,7 +87,7 @@ canvas.addEventListener("touchend", e => {
         if (dy > 0 && direcao !== "UP") direcao = "DOWN";
         if (dy < 0 && direcao !== "DOWN") direcao = "UP";
     }
-});
+}, { passive: false });
 
 // Teclado (PC)
 document.addEventListener("keydown", e => {
@@ -90,7 +106,7 @@ function gerarMaca() {
 
 function iniciar() {
     ajustarTela();
-    cobrinha = [{x: 0, y: 0}];
+    cobrinha = [{ x: 0, y: 0 }];
     direcao = "RIGHT";
     maca = gerarMaca();
     clearInterval(intervalo);
@@ -100,7 +116,7 @@ function iniciar() {
 function loop() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    let head = {...cobrinha[0]};
+    const head = { ...cobrinha[0] };
 
     if (direcao === "UP") head.y -= tamanho;
     if (direcao === "DOWN") head.y += tamanho;
